@@ -1814,7 +1814,7 @@ url.auto_search:
 
 url.default_page:
   type: FuzzyUrl
-  default: https://start.duckduckgo.com/
+  default: https://google.fr
   desc: >-
     Page to open if :open -t/-b/-w is used without URL.
 
@@ -1835,7 +1835,7 @@ url.open_base_url:
 
 url.searchengines:
   default:
-    DEFAULT: https://duckduckgo.com/?q={}
+    DEFAULT: https://google.com/?q={}
   type:
     name: Dict
     required_keys: ['DEFAULT']
@@ -1859,7 +1859,7 @@ url.start_pages:
   type:
     name: ListOrValue
     valtype: FuzzyUrl
-  default: ["https://start.duckduckgo.com"]
+  default: ["https://google.fr"]
   desc: Page(s) to open at the start.
 
 url.yank_ignored_parameters:
