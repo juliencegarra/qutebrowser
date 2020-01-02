@@ -347,7 +347,13 @@ def _init_formatters(
     use_colorama = False
     color_supported = os.name == 'posix' or colorama
 
-    if color_supported and (sys.stderr.isatty() or force_color) and color:
+
+    try:
+        is_atty = sys.stderr.isatty()
+    except:
+        is_atty = False
+
+    if color_supported and (is_atty or force_color) and color:
         use_colors = True
         if colorama and os.name != 'posix':
             use_colorama = True

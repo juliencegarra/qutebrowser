@@ -24,10 +24,11 @@ import base64
 import itertools
 import functools
 import typing
+import time
 
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QRect, QPoint, QTimer, Qt,
                           QCoreApplication, QEventLoop)
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QApplication, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QApplication, QSizePolicy, QToolBar, QLineEdit
 
 from qutebrowser.commands import runners
 from qutebrowser.api import cmdutils
@@ -259,6 +260,21 @@ class MainWindow(QWidget):
         self.state_before_fullscreen = self.windowState()
         config.set_register_stylesheet(self)
 
+        START_TIME = time.time()
+
+    def add_log(message):
+        """ Small hack to append message to a log """
+        if not START_TIME:
+            pass
+        else:
+            m = str((time.time()-START_TIME) * 1000.0)
+
+            with codecs.open("trace.txt", "a", "utf-8-sig") as ft:
+                   ft.write(m + ";")
+                   ft.write(message)
+                   ft.write("\n")
+
+
     def _init_geometry(self, geometry):
         """Initialize the window geometry or load it from disk."""
         if geometry is not None:
@@ -380,28 +396,112 @@ class MainWindow(QWidget):
         elif option == 'window.hide_decoration':
             self._set_decoration(config.val.window.hide_decoration)
 
+
+    def add_navbar(self):
+        #  Standard navigation tools
+
+        navigation_layout = ["back", "forward", "refresh", "spacer", "url", "spacer", "search", "searchnext"]
+
+        self.nav_items = {
+            "back": None,
+##            "forward": self.browser_window.pageAction(AdmWebPage.Forward),
+##            "refresh": self.browser_window.pageAction(AdmWebPage.Reload),
+##            "stop": self.browser_window.pageAction(AdmWebPage.Stop),
+##            "quit": self.createAction(
+##                self.config.get("quit_button_text"),
+##                qb_mode_callbacks.get(
+##                    self.config.get("quit_button_mode"),
+##                    self.reset_browser
+##                ),
+##                QKeySequence("Alt+F"),
+##                None,
+##                quit_button_tooltip
+##            ),
+##            "search": self.createAction(
+##                "Search",
+##                self.DisplaySearchInPage,
+##                QKeySequence("Ctrl+F"),
+##                "search",
+##                "Display the search box"
+##            ),
+        }
+
+        self.navigation_bar = QToolBar("Navigation")
+        self.navigation_bar.setObjectName("navigation")
+        #self.addToolBar(Qt.TopToolBarArea, self.navigation_bar)
+        self.navigation_bar.setMovable(False)
+        self.navigation_bar.setFloatable(False)
+
+
+        self.url = None
+
+        for item in navigation_layout:
+                if item == "separator":
+                    self.navigation_bar.addSeparator()
+                elif item == "url":
+                    self.url = QLineEdit()
+                    self.url.setMinimumSize(1150,30)
+                    self.url.setStyleSheet("font-size:20px;")
+                    #self.url.keyPressEvent.connect(self.keyPressEvent)
+                    self.url.returnPressed.connect(self.Enter)
+                    self.navigation_bar.addWidget(self.url)
+
+                elif item == "spacer":
+                    # an expanding spacer.
+                    spacer = QWidget()
+                    spacer.setSizePolicy(
+                        QSizePolicy.Expanding,
+                        QSizePolicy.Preferred
+                    )
+                    self.navigation_bar.addWidget(spacer)
+
+                else:
+
+                    action = self.nav_items.get(item, None)
+                    if action:
+                        self.navigation_bar.addAction(action)
+                        (self.navigation_bar.widgetForAction(action)
+                         .setObjectName("navigation_button"))
+
+            # This removes the ability to toggle off the navigation bar:
+##            self.nav_toggle = self.navigation_bar.toggleViewAction()
+##            self.nav_toggle.setVisible(False)
+            # End "if show_navigation is True" block
+
+
+    def Enter(self):
+        print("TODO!")
+
     def _add_widgets(self):
         """Add or readd all widgets to the VBox."""
-        self._vbox.removeWidget(self.tabbed_browser.widget)
-        self._vbox.removeWidget(self._downloadview)
-        self._vbox.removeWidget(self.status)
-        widgets = [self.tabbed_browser.widget]
+##        self._vbox.removeWidget(self.tabbed_browser.widget)
+##        self._vbox.removeWidget(self._downloadview)
+##        self._vbox.removeWidget(self.status)
 
-        downloads_position = config.val.downloads.position
-        if downloads_position == 'top':
-            widgets.insert(0, self._downloadview)
-        elif downloads_position == 'bottom':
-            widgets.append(self._downloadview)
-        else:
-            raise ValueError("Invalid position {}!".format(downloads_position))
+        widgets = []
+        #self.add_navbar()
+        #widgets.append(self.navigation_bar)
+        widgets.append(self.tabbed_browser.widget)
 
-        status_position = config.val.statusbar.position
-        if status_position == 'top':
-            widgets.insert(0, self.status)
-        elif status_position == 'bottom':
-            widgets.append(self.status)
-        else:
-            raise ValueError("Invalid position {}!".format(status_position))
+##
+##
+##
+##
+##        downloads_position = config.val.downloads.position
+##        if downloads_position == 'top':
+##            widgets.insert(0, self._downloadview)
+##        elif downloads_position == 'bottom':
+##            widgets.append(self._downloadview)
+##        else:
+##            raise ValueError("Invalid position {}!".format(downloads_position))
+
+##        status_position = config.val.statusbar.position
+##        if status_position == 'top':
+##            widgets.insert(0, self.status)
+##        elif status_position == 'bottom':
+##            widgets.append(self.status)
+##        else:
+##            raise ValueError("Invalid position {}!".format(status_position))
 
         for widget in widgets:
             self._vbox.addWidget(widget)
