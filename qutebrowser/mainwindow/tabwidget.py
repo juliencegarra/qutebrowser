@@ -380,9 +380,7 @@ class TabBar(QTabBar):
     """
 
     STYLESHEET = """
-        TabBar {
-            background-color: {{ conf.colors.tabs.bar.bg }};
-        }
+
     """
 
     new_tab_requested = pyqtSignal()
@@ -390,8 +388,8 @@ class TabBar(QTabBar):
     def __init__(self, win_id, parent=None):
         super().__init__(parent)
         self._win_id = win_id
-        self.setStyle(TabBarStyle())
-        self._set_font()
+        #self.setStyle(TabBarStyle())
+        #self._set_font()
         config.instance.changed.connect(self._on_config_changed)
         self.vertical = False
         self._auto_hide_timer = QTimer()
@@ -546,32 +544,32 @@ class TabBar(QTabBar):
             return
         super().mousePressEvent(e)
 
-    def minimumTabSizeHint(self, index: int, ellipsis: bool = True) -> QSize:
-        """Set the minimum tab size to indicator/icon/... text.
-
-        Args:
-            index: The index of the tab to get a size hint for.
-            ellipsis: Whether to use ellipsis to calculate width
-                      instead of the tab's text.
-                      Forced to False for pinned tabs.
-        Return:
-            A QSize of the smallest tab size we can make.
-        """
-        icon = self.tabIcon(index)
-        if icon.isNull():
-            icon_width = 0
-        else:
-            icon_width = min(
-                icon.actualSize(self.iconSize()).width(),
-                self.iconSize().width()) + TabBarStyle.ICON_PADDING
-
-        pinned = self._tab_pinned(index)
-        if not self.vertical and pinned and config.val.tabs.pinned.shrink:
-            # Never consider ellipsis an option for horizontal pinned tabs
-            ellipsis = False
-        return self._minimum_tab_size_hint_helper(self.tabText(index),
-                                                  icon_width, ellipsis,
-                                                  pinned)
+##    def minimumTabSizeHint(self, index: int, ellipsis: bool = True) -> QSize:
+##        """Set the minimum tab size to indicator/icon/... text.
+##
+##        Args:
+##            index: The index of the tab to get a size hint for.
+##            ellipsis: Whether to use ellipsis to calculate width
+##                      instead of the tab's text.
+##                      Forced to False for pinned tabs.
+##        Return:
+##            A QSize of the smallest tab size we can make.
+##        """
+##        icon = self.tabIcon(index)
+##        if icon.isNull():
+##            icon_width = 0
+##        else:
+##            icon_width = min(
+##                icon.actualSize(self.iconSize()).width(),
+##                self.iconSize().width()) + TabBarStyle.ICON_PADDING
+##
+##        pinned = self._tab_pinned(index)
+##        if not self.vertical and pinned and config.val.tabs.pinned.shrink:
+##            # Never consider ellipsis an option for horizontal pinned tabs
+##            ellipsis = False
+##        return self._minimum_tab_size_hint_helper(self.tabText(index),
+##                                                  icon_width, ellipsis,
+##                                                  pinned)
 
     @debugcachestats.register(name='tab width cache')
     @functools.lru_cache(maxsize=2**9)
@@ -626,78 +624,78 @@ class TabBar(QTabBar):
             return False
         return widget.data.pinned
 
-    def tabSizeHint(self, index: int) -> QSize:
-        """Override tabSizeHint to customize qb's tab size.
+##    def tabSizeHint(self, index: int) -> QSize:
+##        """Override tabSizeHint to customize qb's tab size.
+##
+##        https://wiki.python.org/moin/PyQt/Customising%20tab%20bars
+##
+##        Args:
+##            index: The index of the tab.
+##
+##        Return:
+##            A QSize.
+##        """
+##        if self.count() == 0:
+##            # This happens on startup on macOS.
+##            # We return it directly rather than setting `size' because we don't
+##            # want to ensure it's valid in this special case.
+##            return QSize()
+##
+##        height = self._minimum_tab_height()
+##        if self.vertical:
+##            confwidth = str(config.cache['tabs.width'])
+##            if confwidth.endswith('%'):
+##                main_window = objreg.get('main-window', scope='window',
+##                                         window=self._win_id)
+##                perc = int(confwidth.rstrip('%'))
+##                width = main_window.width() * perc / 100
+##            else:
+##                width = int(confwidth)
+##            size = QSize(width, height)
+##        else:
+##            if config.cache['tabs.pinned.shrink'] and self._tab_pinned(index):
+##                # Give pinned tabs the minimum size they need to display their
+##                # titles, let Qt handle scaling it down if we get too small.
+##                width = self.minimumTabSizeHint(index, ellipsis=False).width()
+##            else:
+##                # Request as much space as possible so we fill the tabbar, let
+##                # Qt shrink us down. If for some reason (tests, bugs)
+##                # self.width() gives 0, use a sane min of 10 px
+##                width = max(self.width(), 10)
+##                max_width = config.cache['tabs.max_width']
+##                if max_width > 0:
+##                    width = min(max_width, width)
+##            size = QSize(width, height)
+##        qtutils.ensure_valid(size)
+##        return size
 
-        https://wiki.python.org/moin/PyQt/Customising%20tab%20bars
-
-        Args:
-            index: The index of the tab.
-
-        Return:
-            A QSize.
-        """
-        if self.count() == 0:
-            # This happens on startup on macOS.
-            # We return it directly rather than setting `size' because we don't
-            # want to ensure it's valid in this special case.
-            return QSize()
-
-        height = self._minimum_tab_height()
-        if self.vertical:
-            confwidth = str(config.cache['tabs.width'])
-            if confwidth.endswith('%'):
-                main_window = objreg.get('main-window', scope='window',
-                                         window=self._win_id)
-                perc = int(confwidth.rstrip('%'))
-                width = main_window.width() * perc / 100
-            else:
-                width = int(confwidth)
-            size = QSize(width, height)
-        else:
-            if config.cache['tabs.pinned.shrink'] and self._tab_pinned(index):
-                # Give pinned tabs the minimum size they need to display their
-                # titles, let Qt handle scaling it down if we get too small.
-                width = self.minimumTabSizeHint(index, ellipsis=False).width()
-            else:
-                # Request as much space as possible so we fill the tabbar, let
-                # Qt shrink us down. If for some reason (tests, bugs)
-                # self.width() gives 0, use a sane min of 10 px
-                width = max(self.width(), 10)
-                max_width = config.cache['tabs.max_width']
-                if max_width > 0:
-                    width = min(max_width, width)
-            size = QSize(width, height)
-        qtutils.ensure_valid(size)
-        return size
-
-    def paintEvent(self, event):
-        """Override paintEvent to draw the tabs like we want to."""
-        p = QStylePainter(self)
-        selected = self.currentIndex()
-        for idx in range(self.count()):
-            if not event.region().intersects(self.tabRect(idx)):
-                # Don't repaint if we are outside the requested region
-                continue
-
-            tab = QStyleOptionTab()
-            self.initStyleOption(tab, idx)
-
-            setting = 'colors.tabs'
-            if self._tab_pinned(idx):
-                setting += '.pinned'
-            if idx == selected:
-                setting += '.selected'
-            setting += '.odd' if (idx + 1) % 2 else '.even'
-
-            tab.palette.setColor(QPalette.Window,
-                                 config.cache[setting + '.bg'])
-            tab.palette.setColor(QPalette.WindowText,
-                                 config.cache[setting + '.fg'])
-
-            indicator_color = self.tab_indicator_color(idx)
-            tab.palette.setColor(QPalette.Base, indicator_color)
-            p.drawControl(QStyle.CE_TabBarTab, tab)
+##    def paintEvent(self, event):
+##        """Override paintEvent to draw the tabs like we want to."""
+##        p = QStylePainter(self)
+##        selected = self.currentIndex()
+##        for idx in range(self.count()):
+##            if not event.region().intersects(self.tabRect(idx)):
+##                # Don't repaint if we are outside the requested region
+##                continue
+##
+##            tab = QStyleOptionTab()
+##            self.initStyleOption(tab, idx)
+##
+##            setting = 'colors.tabs'
+##            if self._tab_pinned(idx):
+##                setting += '.pinned'
+##            if idx == selected:
+##                setting += '.selected'
+##            setting += '.odd' if (idx + 1) % 2 else '.even'
+##
+##            tab.palette.setColor(QPalette.Window,
+##                                 config.cache[setting + '.bg'])
+##            tab.palette.setColor(QPalette.WindowText,
+##                                 config.cache[setting + '.fg'])
+##
+##            indicator_color = self.tab_indicator_color(idx)
+##            tab.palette.setColor(QPalette.Base, indicator_color)
+##            p.drawControl(QStyle.CE_TabBarTab, tab)
 
     def tabInserted(self, idx):
         """Update visibility when a tab was inserted."""
