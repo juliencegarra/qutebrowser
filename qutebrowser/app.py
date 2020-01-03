@@ -850,9 +850,9 @@ class EventFilter(QObject):
         super().__init__(parent)
         self._activated = True
         self._handlers = {
-            QEvent.KeyPress: self._handle_key_event,
-            QEvent.KeyRelease: self._handle_key_event,
-            QEvent.ShortcutOverride: self._handle_key_event,
+##            QEvent.KeyPress: self._handle_key_event,
+##            QEvent.KeyRelease: self._handle_key_event,
+##            QEvent.ShortcutOverride: self._handle_key_event,
         }
 
     def install(self):
