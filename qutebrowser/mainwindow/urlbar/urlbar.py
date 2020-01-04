@@ -208,7 +208,7 @@ class UrlBar(QWidget):
         padding = config.val.statusbar.padding
         self._hbox.setContentsMargins(padding.left, 0, padding.right, 0)
 
-    @pyqtSlot(browsertab.AbstractTab)
+    #@pyqtSlot(browsertab.AbstractTab)
     def on_tab_changed(self, tab):
         self.cur_tab = tab
         url = tab.url(requested=True)

@@ -37,6 +37,7 @@ from qutebrowser.config import config, configfiles
 from qutebrowser.utils import (message, log, usertypes, qtutils, objreg, utils,
                                jinja, debug)
 from qutebrowser.mainwindow import messageview, prompt
+from qutebrowser.mainwindow.urlbar import urlbar
 from qutebrowser.completion import completionwidget, completer
 from qutebrowser.keyinput import modeman
 from qutebrowser.browser import commands, downloadview, hints, downloads
@@ -178,7 +179,6 @@ class MainWindow(QWidget):
         # - browsertab -> hints -> webelem -> mainwindow -> bar -> browsertab
         from qutebrowser.mainwindow import tabbedbrowser
         from qutebrowser.mainwindow.statusbar import bar
-        from qutebrowser.mainwindow.urlbar import urlbar
 
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._overlays = []  # type: typing.MutableSequence[_OverlayInfoType]
