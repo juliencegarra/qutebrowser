@@ -28,7 +28,8 @@ import time
 
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QRect, QPoint, QTimer, Qt,
                           QCoreApplication, QEventLoop)
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QApplication, QSizePolicy, QToolBar, QLineEdit
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QApplication, QSizePolicy,
+                            QMessageBox)
 
 from qutebrowser.commands import runners
 from qutebrowser.api import cmdutils
@@ -41,7 +42,8 @@ from qutebrowser.keyinput import modeman
 from qutebrowser.browser import commands, downloadview, hints, downloads
 from qutebrowser.misc import crashsignal, keyhintwidget, sessions
 
-
+# Show version number and contact in the exit box as in the previous browser
+VERSION = "WebBrowser v2.0 - Julien Cegarra"
 win_id_gen = itertools.count(0)
 
 
@@ -176,6 +178,7 @@ class MainWindow(QWidget):
         # - browsertab -> hints -> webelem -> mainwindow -> bar -> browsertab
         from qutebrowser.mainwindow import tabbedbrowser
         from qutebrowser.mainwindow.statusbar import bar
+        from qutebrowser.mainwindow.urlbar import urlbar
 
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._overlays = []  # type: typing.MutableSequence[_OverlayInfoType]
@@ -220,6 +223,10 @@ class MainWindow(QWidget):
         self.status = bar.StatusBar(win_id=self.win_id, private=private,
                                     parent=self)
 
+        self.url = urlbar.UrlBar(win_id=self.win_id, private=private,
+                                    parent=self)
+
+        self._vbox.addWidget(self.url)
         self._add_widgets()
         self._downloadview.show()
 
@@ -261,6 +268,7 @@ class MainWindow(QWidget):
         config.set_register_stylesheet(self)
 
         START_TIME = time.time()
+        self.showMaximized()
 
     def add_log(message):
         """ Small hack to append message to a log """
@@ -397,81 +405,6 @@ class MainWindow(QWidget):
             self._set_decoration(config.val.window.hide_decoration)
 
 
-    def add_navbar(self):
-        #  Standard navigation tools
-
-        navigation_layout = ["back", "forward", "refresh", "spacer", "url", "spacer", "search", "searchnext"]
-
-        self.nav_items = {
-            "back": None,
-##            "forward": self.browser_window.pageAction(AdmWebPage.Forward),
-##            "refresh": self.browser_window.pageAction(AdmWebPage.Reload),
-##            "stop": self.browser_window.pageAction(AdmWebPage.Stop),
-##            "quit": self.createAction(
-##                self.config.get("quit_button_text"),
-##                qb_mode_callbacks.get(
-##                    self.config.get("quit_button_mode"),
-##                    self.reset_browser
-##                ),
-##                QKeySequence("Alt+F"),
-##                None,
-##                quit_button_tooltip
-##            ),
-##            "search": self.createAction(
-##                "Search",
-##                self.DisplaySearchInPage,
-##                QKeySequence("Ctrl+F"),
-##                "search",
-##                "Display the search box"
-##            ),
-        }
-
-        self.navigation_bar = QToolBar("Navigation")
-        self.navigation_bar.setObjectName("navigation")
-        #self.addToolBar(Qt.TopToolBarArea, self.navigation_bar)
-        self.navigation_bar.setMovable(False)
-        self.navigation_bar.setFloatable(False)
-
-
-        self.url = None
-
-        for item in navigation_layout:
-                if item == "separator":
-                    self.navigation_bar.addSeparator()
-                elif item == "url":
-                    self.url = QLineEdit()
-                    self.url.setMinimumSize(1150,30)
-                    self.url.setStyleSheet("font-size:20px;")
-                    #self.url.keyPressEvent.connect(self.keyPressEvent)
-                    self.url.returnPressed.connect(self.Enter)
-                    self.navigation_bar.addWidget(self.url)
-
-                elif item == "spacer":
-                    # an expanding spacer.
-                    spacer = QWidget()
-                    spacer.setSizePolicy(
-                        QSizePolicy.Expanding,
-                        QSizePolicy.Preferred
-                    )
-                    self.navigation_bar.addWidget(spacer)
-
-                else:
-
-                    action = self.nav_items.get(item, None)
-                    if action:
-                        self.navigation_bar.addAction(action)
-                        (self.navigation_bar.widgetForAction(action)
-                         .setObjectName("navigation_button"))
-
-            # This removes the ability to toggle off the navigation bar:
-##            self.nav_toggle = self.navigation_bar.toggleViewAction()
-##            self.nav_toggle.setVisible(False)
-            # End "if show_navigation is True" block
-
-
-    def Enter(self):
-        print("TODO!")
-
     def _add_widgets(self):
         """Add or readd all widgets to the VBox."""
 ##        self._vbox.removeWidget(self.tabbed_browser.widget)
@@ -479,13 +412,9 @@ class MainWindow(QWidget):
 ##        self._vbox.removeWidget(self.status)
 
         widgets = []
-        #self.add_navbar()
-        #widgets.append(self.navigation_bar)
-        widgets.append(self.tabbed_browser.widget)
 
-##
-##
-##
+        widgets.append(self.url)
+        widgets.append(self.tabbed_browser.widget)
 ##
 ##        downloads_position = config.val.downloads.position
 ##        if downloads_position == 'top':
@@ -495,16 +424,17 @@ class MainWindow(QWidget):
 ##        else:
 ##            raise ValueError("Invalid position {}!".format(downloads_position))
 
-##        status_position = config.val.statusbar.position
-##        if status_position == 'top':
-##            widgets.insert(0, self.status)
-##        elif status_position == 'bottom':
-##            widgets.append(self.status)
-##        else:
-##            raise ValueError("Invalid position {}!".format(status_position))
+        status_position = config.val.statusbar.position
+        if status_position == 'top':
+            widgets.insert(0, self.status)
+        elif status_position == 'bottom':
+            widgets.append(self.status)
+        else:
+            raise ValueError("Invalid position {}!".format(status_position))
 
         for widget in widgets:
             self._vbox.addWidget(widget)
+
 
     def _load_state_geometry(self):
         """Load the geometry from the state file."""
@@ -630,6 +560,23 @@ class MainWindow(QWidget):
         self.tabbed_browser.cur_fullscreen_requested.connect(
             self.status.maybe_hide)
 
+
+        #urlbar
+        self.tabbed_browser.current_tab_changed.connect(
+            self.url.on_tab_changed)
+        self.tabbed_browser.cur_load_started.connect(
+            self.url.on_load_started)
+        self.tabbed_browser.cur_load_finished.connect(
+            self.url.on_load_finished)
+
+        self.tabbed_browser.cur_url_changed.connect(
+            self.url.on_set_url)
+        self.tabbed_browser.cur_link_hovered.connect(
+            self.url.set_hover_url)
+        self.tabbed_browser.cur_load_status_changed.connect(
+            self.url.on_load_status_changed)
+
+
         # downloadview
         self.tabbed_browser.cur_fullscreen_requested.connect(
             self._downloadview.on_fullscreen_requested)
@@ -708,42 +655,33 @@ class MainWindow(QWidget):
         sessions.session_manager.save_last_window_session()
         self._save_geometry()
         log.destroy.debug("Closing window {}".format(self.win_id))
-        self.tabbed_browser.shutdown()
+        #self.tabbed_browser.shutdown()
+        # Fix for app not really exiting...
+        self._commandrunner.run('quit')
 
     def closeEvent(self, e):
         """Override closeEvent to display a confirmation if needed."""
         if crashsignal.is_crashing:
             e.accept()
             return
-        tab_count = self.tabbed_browser.widget.count()
-        download_count = self._download_model.running_downloads()
-        quit_texts = []
-        # Ask if multiple-tabs are open
-        if 'multiple-tabs' in config.val.confirm_quit and tab_count > 1:
-            quit_texts.append("{} tabs are open.".format(tab_count))
-        # Ask if multiple downloads running
-        if 'downloads' in config.val.confirm_quit and download_count > 0:
-            quit_texts.append("{} {} running.".format(
-                download_count,
-                "download is" if download_count == 1 else "downloads are"))
-        # Process all quit messages that user must confirm
-        if quit_texts or 'always' in config.val.confirm_quit:
-            msg = jinja.environment.from_string("""
-                <ul>
-                {% for text in quit_texts %}
-                   <li>{{text}}</li>
-                {% endfor %}
-                </ul>
-            """.strip()).render(quit_texts=quit_texts)
-            confirmed = message.ask('Really quit?', msg,
-                                    mode=usertypes.PromptMode.yesno,
-                                    default=True)
 
-            # Stop asking if the user cancels
-            if not confirmed:
-                log.destroy.debug("Cancelling closing of window {}".format(
-                    self.win_id))
-                e.ignore()
-                return
-        e.accept()
-        self._do_close()
+
+        #add_log("ASK_QUIT")
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Information)
+
+        msg.setText(u"Êtes-vous sûr de vouloir quitter le navigateur?")
+        msg.setWindowTitle(VERSION)
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.button(QMessageBox.Ok).setText("Oui")
+        msg.button(QMessageBox.Cancel).setText("Non, poursuivre")
+        retval = msg.exec_()
+
+        if retval==QMessageBox.Ok:
+            self.url.add_log("QUIT")
+            e.accept() # let the window close
+            self._do_close()
+        else:
+            e.ignore()
+            return
+
