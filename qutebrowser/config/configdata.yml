@@ -396,7 +396,7 @@ content.frame_flattening:
     This will flatten all the frames to become one scrollable page.
 
 content.geolocation:
-  default: ask
+  default: false
   type: BoolAsk
   supports_pattern: true
   desc: Allow websites to request geolocations.
@@ -494,7 +494,7 @@ content.headers.user_agent:
     Note that the value read from JavaScript is always the global value.
 
 content.host_blocking.enabled:
-  default: true
+  default: false
   supports_pattern: true
   type: Bool
   desc: Enable host blocking.
@@ -939,7 +939,7 @@ downloads.location.directory:
     If unset, a sensible OS-specific default is used.
 
 downloads.location.prompt:
-  default: true
+  default: false
   type: Bool
   desc: >-
     Prompt the user for the download location.
@@ -1451,7 +1451,7 @@ spellcheck.languages:
 
 statusbar.hide:
   type: Bool
-  default: false
+  default: true
   desc: Hide the statusbar unless a message is shown.
 
 statusbar.padding:
@@ -1606,7 +1606,7 @@ tabs.select_on_remove:
   desc: Which tab to select when the focused tab is removed.
 
 tabs.show:
-  default: always
+  default: multiple
   type:
     name: String
     valid_values:
@@ -1636,7 +1636,7 @@ tabs.title.alignment:
   desc: Alignment of the text inside of tabs.
 
 tabs.title.format:
-  default: '{audio}{index}: {current_title}'
+  default: '{audio}{current_title}'
   type:
     name: FormatString
     fields:
@@ -1905,7 +1905,7 @@ window.title_format:
       - current_url
       - protocol
       - audio
-  default: '{perc}{current_title}{title_sep}qutebrowser'
+  default: '{perc}{current_title}{title_sep}WebBrowser'
   desc: |
     Format to use for the window title. The same placeholders like for
     `tabs.title.format` are defined.
