@@ -35,39 +35,39 @@ class Message(QLabel):
     def __init__(self, level, text, replace, parent=None):
         super().__init__(text, parent)
         self.replace = replace
-        self.setAttribute(Qt.WA_StyledBackground, True)
-        stylesheet = """
-            padding-top: 2px;
-            padding-bottom: 2px;
-        """
-        if level == usertypes.MessageLevel.error:
-            stylesheet += """
-                background-color: {{ conf.colors.messages.error.bg }};
-                color: {{ conf.colors.messages.error.fg }};
-                font: {{ conf.fonts.messages.error }};
-                border-bottom: 1px solid {{ conf.colors.messages.error.border }};
-            """
-        elif level == usertypes.MessageLevel.warning:
-            stylesheet += """
-                background-color: {{ conf.colors.messages.warning.bg }};
-                color: {{ conf.colors.messages.warning.fg }};
-                font: {{ conf.fonts.messages.warning }};
-                border-bottom:
-                    1px solid {{ conf.colors.messages.warning.border }};
-            """
-        elif level == usertypes.MessageLevel.info:
-            stylesheet += """
-                background-color: {{ conf.colors.messages.info.bg }};
-                color: {{ conf.colors.messages.info.fg }};
-                font: {{ conf.fonts.messages.info }};
-                border-bottom: 1px solid {{ conf.colors.messages.info.border }}
-            """
-        else:  # pragma: no cover
-            raise ValueError("Invalid level {!r}".format(level))
-        # We don't bother with set_register_stylesheet here as it's short-lived
-        # anyways.
-        config.set_register_stylesheet(self, stylesheet=stylesheet,
-                                       update=False)
+##        self.setAttribute(Qt.WA_StyledBackground, True)
+##        stylesheet = """
+##            padding-top: 2px;
+##            padding-bottom: 2px;
+##        """
+##        if level == usertypes.MessageLevel.error:
+##            stylesheet += """
+##                background-color: {{ conf.colors.messages.error.bg }};
+##                color: {{ conf.colors.messages.error.fg }};
+##                font: {{ conf.fonts.messages.error }};
+##                border-bottom: 1px solid {{ conf.colors.messages.error.border }};
+##            """
+##        elif level == usertypes.MessageLevel.warning:
+##            stylesheet += """
+##                background-color: {{ conf.colors.messages.warning.bg }};
+##                color: {{ conf.colors.messages.warning.fg }};
+##                font: {{ conf.fonts.messages.warning }};
+##                border-bottom:
+##                    1px solid {{ conf.colors.messages.warning.border }};
+##            """
+##        elif level == usertypes.MessageLevel.info:
+##            stylesheet += """
+##                background-color: {{ conf.colors.messages.info.bg }};
+##                color: {{ conf.colors.messages.info.fg }};
+##                font: {{ conf.fonts.messages.info }};
+##                border-bottom: 1px solid {{ conf.colors.messages.info.border }}
+##            """
+##        else:  # pragma: no cover
+##            raise ValueError("Invalid level {!r}".format(level))
+##        # We don't bother with set_register_stylesheet here as it's short-lived
+##        # anyways.
+##        config.set_register_stylesheet(self, stylesheet=stylesheet,
+##                                       update=False)
 
 
 class MessageView(QWidget):
