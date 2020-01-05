@@ -656,6 +656,9 @@ class MainWindow(QWidget):
         self._save_geometry()
         log.destroy.debug("Closing window {}".format(self.win_id))
         #self.tabbed_browser.shutdown()
+        # Clear the cache before exiting
+        self._commandrunner.run('history-clear --force')
+
         # Fix for app not really exiting...
         self._commandrunner.run('quit')
 

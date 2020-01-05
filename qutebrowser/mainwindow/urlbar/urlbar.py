@@ -190,15 +190,15 @@ class UrlBar(QWidget):
         self.add_log("SAISIE_BARREADRESSE;"+url)
 
         http = "http://"
-        https = "https://"
+        sep = "://"
 
         www = "www."
 
-        if "." in url and (http not in url and https not in url):
+        if "." in url and (sep not in url):
             url = http + url
 
-        elif "." not in url:
-            url = "http://www.google.com/search?q="+url
+        #elif "." not in url:
+        #    url = "http://www.google.com/search?q="+url
 
         window = objreg.get('tabbed-browser', scope='window',
                             window=self._win_id)
