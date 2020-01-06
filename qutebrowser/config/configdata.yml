@@ -669,14 +669,23 @@ content.notifications:
   desc: Allow websites to show notifications.
 
 content.pdfjs:
-  default: false
-  type: Bool
+  renamed: content.pdf
+
+content.pdf:
+  default: 'pdfjs'
+  type:
+    name: String
+    valid_values:
+      - download-pdfjs: Download PDF files, use PDF.js
+          with `:prompt-open-download --pdf`.
+      - download-pdfium: Download PDF files, use PDFium with
+          `:prompt-open-download --pdf`. Requires Qt 5.13 or newer.
+      - pdfjs: Use PDF.js to display PDFs.
+      - pdfium: Use Chromium's PDFium viewer to display PDFs.
+          Requires Qt 5.13 or newer.
   supports_pattern: true
   desc: >-
-    Allow pdf.js to view PDF files in the browser.
-
-    Note that the files can still be downloaded by clicking the download button
-    in the pdf.js viewer.
+    How to display PDF files in the browser.
 
 content.persistent_storage:
   default: ask
@@ -689,7 +698,7 @@ content.persistent_storage:
     `navigator.webkitPersistentStorage.requestQuota`.
 
 content.plugins:
-  default: false
+  default: true
   type: Bool
   supports_pattern: true
   desc: Enable plugins in Web pages.
@@ -2822,7 +2831,7 @@ bindings.default:
     prompt:
       <Return>: prompt-accept
       <Ctrl-X>: prompt-open-download
-      <Ctrl-P>: prompt-open-download --pdfjs
+      <Ctrl-P>: prompt-open-download --pdf
       <Shift-Tab>: prompt-item-focus prev
       <Up>: prompt-item-focus prev
       <Tab>: prompt-item-focus next
