@@ -132,25 +132,25 @@ def get_pdfjs_res_and_path(path):
     system_paths = [
         # Debian pdf.js-common
         # Arch Linux pdfjs (AUR)
-##        '/usr/share/pdf.js/',
-##        # Flatpak (Flathub)
-##        '/app/share/pdf.js/',
-##        # Arch Linux pdf.js (AUR)
-##        '/usr/share/javascript/pdf.js/',
-##        # Debian libjs-pdf
-##        '/usr/share/javascript/pdf/',
+        '/usr/share/pdf.js/',
+        # Flatpak (Flathub)
+        '/app/share/pdf.js/',
+        # Arch Linux pdf.js (AUR)
+        '/usr/share/javascript/pdf.js/',
+        # Debian libjs-pdf
+        '/usr/share/javascript/pdf/',
         # fallback to bundled pdf.js on windows
-        os.path.join(os.getcwd(), '3rdparty', 'pdfjs'),
+##        os.path.join(os.getcwd(), '3rdparty', 'pdfjs'),
         # fallback
-##        os.path.join(standarddir.data(), 'pdfjs'),
+        os.path.join(standarddir.data(), 'pdfjs'),
         # hardcoded fallback for --temp-basedir
-##        os.path.expanduser('~/.local/share/qutebrowser/pdfjs/'),
+        os.path.expanduser('~/.local/share/qutebrowser/pdfjs/'),
     ]
 
     # First try a system wide installation
     # System installations might strip off the 'build/' or 'web/' prefixes.
     # qute expects them, so we need to adjust for it.
-    names_to_try = [path, _remove_prefix(path), 'build/pdf.js']
+    names_to_try = [path, _remove_prefix(path)]
     print(names_to_try)
     for system_path in system_paths:
         print(system_paths)
