@@ -267,6 +267,11 @@ class MainWindow(QWidget):
         self.state_before_fullscreen = self.windowState()
         config.set_register_stylesheet(self)
 
+        # Cleanup leftovers files and history
+        self._commandrunner.run('download-clear')
+        self._commandrunner.run('history-clear --force')
+        self._commandrunner.run('session-delete')
+
         START_TIME = time.time()
         self.showMaximized()
 
@@ -656,8 +661,6 @@ class MainWindow(QWidget):
         self._save_geometry()
         log.destroy.debug("Closing window {}".format(self.win_id))
         #self.tabbed_browser.shutdown()
-        # Clear the cache before exiting
-        self._commandrunner.run('history-clear --force')
 
         # Fix for app not really exiting...
         self._commandrunner.run('quit')
