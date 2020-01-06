@@ -151,9 +151,7 @@ def get_pdfjs_res_and_path(path):
     # System installations might strip off the 'build/' or 'web/' prefixes.
     # qute expects them, so we need to adjust for it.
     names_to_try = [path, _remove_prefix(path)]
-    print(names_to_try)
     for system_path in system_paths:
-        print(system_paths)
         content, file_path = _read_from_system(system_path, names_to_try)
         if content is not None:
             break
