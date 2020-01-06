@@ -50,6 +50,8 @@ UrlType = enum.Enum('UrlType', ['success', 'success_https', 'error', 'warn',
 
 TODAY = datetime.date.today().strftime("%d-%m-%Y")
 
+SAVE_DIR = "sauvegarde_pages"
+
 class UrlBar(QWidget):
 
     STYLESHEET = '''
@@ -95,6 +97,8 @@ class UrlBar(QWidget):
         QTimer.singleShot(0, self._connect_command_runner)
         self.ignore_first_load = True # hack to prevent repeating data to log
         self.START_TIME = time.time()
+        if not os.path.exists(SAVE_DIR):
+            os.mkdir(SAVE_DIR)
         start = time.strftime("%Y-%m-%d %H:%M")
         self.last_html = None
         self.previous_url = None
@@ -228,10 +232,11 @@ class UrlBar(QWidget):
     def dump_html(self, html):
         """Backup web pages for future use when the page is loaded [async save]"""
         id = 0;
-        while os.path.exists(os.path.join("sauvegarde_pages",TODAY+"-"+str(id)+".html")):
+
+        while os.path.exists(os.path.join(SAVE_DIR,TODAY+"-"+str(id)+".html")):
             id+=1
 
-        fp = open(os.path.join("sauvegarde_pages",TODAY+"-"+str(id)+".html"), 'w', encoding="utf-8")
+        fp = open(os.path.join(SAVE_DIR,TODAY+"-"+str(id)+".html"), 'w', encoding="utf-8")
         fp.write(html)
         fp.close()
 
