@@ -90,7 +90,7 @@ class DownloadItem(downloads.AbstractDownloadItem):
         Args:
             reply: The QNetworkReply to download.
         """
-        super().__init__(parent=manager)
+        super().__init__(url=reply.url(), parent=manager)
         self.fileobj = None  # type: typing.Optional[typing.IO[bytes]]
         self.raw_headers = {}  # type: typing.Dict[bytes, bytes]
 

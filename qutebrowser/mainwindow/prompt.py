@@ -420,11 +420,11 @@ class PromptContainer(QWidget):
                      is expanded to the temporary file name. If no `{}` is
                      present, the filename is automatically appended to the
                      cmdline.
-            pdfjs: Open the download via PDF.js.
+            pdf: Display as PDF file.
         """
         assert self._prompt is not None
         try:
-            self._prompt.download_open(cmdline, pdfjs=pdfjs)
+            self._prompt.download_open(cmdline, pdf=pdf)
         except UnsupportedOperationError:
             pass
 
@@ -564,10 +564,10 @@ class _BasePrompt(QWidget):
     def accept(self, value=None, save=False):
         raise NotImplementedError
 
-    def download_open(self, cmdline, pdfjs):
+    def download_open(self, cmdline, pdf):
         """Open the download directly if this is a download prompt."""
         utils.unused(cmdline)
-        utils.unused(pdfjs)
+        utils.unused(pdf)
         raise UnsupportedOperationError
 
     def item_focus(self, _which):
@@ -791,10 +791,9 @@ class DownloadFilenamePrompt(FilenamePrompt):
             self.question.answer = downloads.FileDownloadTarget(answer)
         return done
 
-    def download_open(self, cmdline, pdfjs):
-        if pdfjs:
-            target = downloads.PDFJSDownloadTarget(
-            )  # type: downloads._DownloadTarget
+    def download_open(self, cmdline, pdf):
+        if pdf:
+            target = downloads.OpenPDFDownloadTarget()
         else:
             target = downloads.OpenFileDownloadTarget(cmdline)
 

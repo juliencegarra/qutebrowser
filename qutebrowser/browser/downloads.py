@@ -317,7 +317,7 @@ class OpenFileDownloadTarget(_DownloadTarget):
         return 'temporary file'
 
 
-class PDFJSDownloadTarget(_DownloadTarget):
+class OpenPDFDownloadTarget(_DownloadTarget):
 
     """Open the download via PDF.js."""
 
@@ -325,7 +325,7 @@ class PDFJSDownloadTarget(_DownloadTarget):
         raise NoFilenameError
 
     def __str__(self):
-        return 'temporary PDF.js file'
+        return 'temporary PDF file'
 
 
 class DownloadItemStats(QObject):
@@ -438,6 +438,8 @@ class AbstractDownloadItem(QObject):
         pdfjs_requested: Emitted when PDF.js should be opened.
                          arg 1: The filename of the PDF download.
                          arg 2: The original download URL.
+        pdfium_requested: Emitted when PDFium should be opened with the given
+                          url.
     """
 
     data_changed = pyqtSignal()
@@ -446,8 +448,9 @@ class AbstractDownloadItem(QObject):
     cancelled = pyqtSignal()
     remove_requested = pyqtSignal()
     pdfjs_requested = pyqtSignal(str, QUrl)
+    pdfium_requested = pyqtSignal(QUrl)
 
-    def __init__(self, parent=None):
+    def __init__(self, url, parent=None):
         super().__init__(parent)
         self.done = False
         self.stats = DownloadItemStats(self)
@@ -742,6 +745,7 @@ class AbstractDownloadItem(QObject):
             last_used_directory = os.path.dirname(self._filename)
 
         log.downloads.debug("Setting filename to {}".format(self._filename))
+        force_overwrite = True
         if force_overwrite:
             self._after_set_filename()
         elif os.path.isfile(self._filename):
@@ -796,7 +800,8 @@ class AbstractDownloadItem(QObject):
         elif isinstance(target, FileDownloadTarget):
             self._set_filename(
                 target.filename, force_overwrite=target.force_overwrite)
-        elif isinstance(target, (OpenFileDownloadTarget, PDFJSDownloadTarget)):
+        elif isinstance(target, (OpenFileDownloadTarget,
+                                 OpenPDFDownloadTarget)):
             try:
                 fobj = temp_download_manager.get_tmpfile(self.basename)
             except OSError as exc:
@@ -808,8 +813,13 @@ class AbstractDownloadItem(QObject):
             if isinstance(target, OpenFileDownloadTarget):
                 self.finished.connect(functools.partial(
                     self._open_if_successful, target.cmdline))
-            elif isinstance(target, PDFJSDownloadTarget):
-                self.finished.connect(self._pdfjs_if_successful)
+            elif isinstance(target, OpenPDFDownloadTarget):
+                if pdfjs.pdf_backend(self.url) == pdfjs.PDFBackend.pdfjs:
+                    self.finished.connect(self._pdfjs_if_successful)
+                else:
+                    self.pdfium_requested.emit(self.url)
+                    self.cancel()
+                    return
             else:
                 raise utils.Unreachable
 
@@ -867,6 +877,13 @@ class AbstractDownloadManager(QObject):
         tabbed_browser.tabopen(pdfjs.get_main_url(filename, original_url),
                                background=False)
 
+    @pyqtSlot(QUrl)
+    def _on_pdfium_requested(self, url):
+        """Open PDFium when a download requests it."""
+        tabbed_browser = objreg.get('tabbed-browser', scope='window',
+                                    window='last-focused')
+        tabbed_browser.tabopen(pdfjs.get_pdfium_url(url), background=False)
+
     def _init_item(self, download, auto_remove, suggested_filename):
         """Initialize a newly created DownloadItem."""
         download.cancelled.connect(download.remove)
@@ -884,6 +901,7 @@ class AbstractDownloadManager(QObject):
             functools.partial(self._on_data_changed, download))
         download.error.connect(self._on_error)
         download.pdfjs_requested.connect(self._on_pdfjs_requested)
+        download.pdfium_requested.connect(self._on_pdfium_requested)
 
         download.basename = suggested_filename
         idx = len(self.downloads)

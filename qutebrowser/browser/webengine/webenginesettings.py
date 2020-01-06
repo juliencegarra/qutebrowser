@@ -176,6 +176,10 @@ class WebEngineSettings(websettings.AbstractSettings):
             # Qt 5.12
             'content.dns_prefetch':
                 ('DnsPrefetchEnabled', None),
+
+            # Qt 5.13
+            'content.pdf':
+                ('PdfViewerEnabled', lambda val: val == 'pdfium'),
         }
         for name, (attribute, converter) in new_attributes.items():
             try:
@@ -216,7 +220,7 @@ class ProfileSetter:
             pass
 
         try:
-            settings.setAttribute(QWebEngineSettings.PdfViewerEnabled, False)
+            settings.setAttribute(QWebEngineSettings.PdfViewerEnabled, True)
         except AttributeError:
             # Added in Qt 5.13
             pass

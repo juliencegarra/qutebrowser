@@ -21,6 +21,8 @@
 """pdf.js integration for qutebrowser."""
 
 import os
+import enum
+import urllib.parse
 
 from PyQt5.QtCore import QUrl, QUrlQuery
 
@@ -28,7 +30,6 @@ from qutebrowser.utils import (utils, javascript, jinja, qtutils, usertypes,
                                standarddir, log)
 from qutebrowser.misc import objects
 from qutebrowser.config import config
-
 
 class PDFJSNotFound(Exception):
 
@@ -43,6 +44,7 @@ class PDFJSNotFound(Exception):
         message = "Path '{}' not found".format(path)
         super().__init__(message)
 
+PDFBackend = enum.Enum('PdfBackend', ['pdfium', 'pdfjs'])
 
 def generate_pdfjs_page(filename, url):
     """Return the html content of a page that displays a file with pdfjs.
@@ -130,24 +132,28 @@ def get_pdfjs_res_and_path(path):
     system_paths = [
         # Debian pdf.js-common
         # Arch Linux pdfjs (AUR)
-        '/usr/share/pdf.js/',
-        # Flatpak (Flathub)
-        '/app/share/pdf.js/',
-        # Arch Linux pdf.js (AUR)
-        '/usr/share/javascript/pdf.js/',
-        # Debian libjs-pdf
-        '/usr/share/javascript/pdf/',
+##        '/usr/share/pdf.js/',
+##        # Flatpak (Flathub)
+##        '/app/share/pdf.js/',
+##        # Arch Linux pdf.js (AUR)
+##        '/usr/share/javascript/pdf.js/',
+##        # Debian libjs-pdf
+##        '/usr/share/javascript/pdf/',
+        # fallback to bundled pdf.js on windows
+        os.path.join(os.getcwd(), '3rdparty', 'pdfjs'),
         # fallback
-        os.path.join(standarddir.data(), 'pdfjs'),
+##        os.path.join(standarddir.data(), 'pdfjs'),
         # hardcoded fallback for --temp-basedir
-        os.path.expanduser('~/.local/share/qutebrowser/pdfjs/'),
+##        os.path.expanduser('~/.local/share/qutebrowser/pdfjs/'),
     ]
 
     # First try a system wide installation
     # System installations might strip off the 'build/' or 'web/' prefixes.
     # qute expects them, so we need to adjust for it.
-    names_to_try = [path, _remove_prefix(path)]
+    names_to_try = [path, _remove_prefix(path), 'build/pdf.js']
+    print(names_to_try)
     for system_path in system_paths:
+        print(system_paths)
         content, file_path = _read_from_system(system_path, names_to_try)
         if content is not None:
             break
@@ -156,7 +162,7 @@ def get_pdfjs_res_and_path(path):
     if content is None:
         res_path = '3rdparty/pdfjs/{}'.format(path)
         try:
-            content = utils.read_file(res_path, binary=True)
+            content = utils.read_file(file_path, binary=True)
         except FileNotFoundError:
             raise PDFJSNotFound(path) from None
         except OSError as e:
@@ -233,9 +239,19 @@ def should_use_pdfjs(mimetype, url):
     is_download_url = (url.scheme() == 'blob' and
                        QUrl(url.path()).scheme() == 'qute')
     is_pdf = mimetype in ['application/pdf', 'application/x-pdf']
-    config_enabled = config.instance.get('content.pdfjs', url=url)
+    config_enabled = config.instance.get('content.pdf', url=url) == 'pdfjs'
     return is_pdf and not is_download_url and config_enabled
 
+def pdf_backend(url):
+    """Get the PDF backend to use."""
+    setting = config.instance.get('content.pdf', url=url)
+    backends = {
+        'download-pdfjs': PDFBackend.pdfjs,
+        'pdfjs': PDFBackend.pdfjs,
+        'download-pdfium': PDFBackend.pdfium,
+        'pdfium': PDFBackend.pdfium,
+    }
+    return backends[setting]
 
 def get_main_url(filename: str, original_url: QUrl) -> QUrl:
     """Get the URL to be opened to view a local PDF."""
@@ -247,3 +263,9 @@ def get_main_url(filename: str, original_url: QUrl) -> QUrl:
     query.addQueryItem('source', urlstr)
     url.setQuery(query)
     return url
+
+def get_pdfium_url(url):
+    """Get the URL to view a PDFium instance."""
+    view_url = QUrl('chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai/index.html')
+    view_url.setQuery(url.toString(QUrl.FullyEncoded))
+    return view_url

@@ -40,7 +40,7 @@ class DownloadItem(downloads.AbstractDownloadItem):
     """
 
     def __init__(self, qt_item: QWebEngineDownloadItem, parent=None):
-        super().__init__(parent)
+        super().__init__(url=qt_item.url(), parent=parent)
         self._qt_item = qt_item
         qt_item.downloadProgress.connect(  # type: ignore
             self.stats.on_download_progress)
@@ -242,7 +242,7 @@ class DownloadManager(downloads.AbstractDownloadManager):
             self._mhtml_target = None
             return
         if use_pdfjs:
-            download.set_target(downloads.PDFJSDownloadTarget())
+            download.set_target(downloads.OpenPDFDownloadTarget())
             return
 
         filename = downloads.immediate_download_path()

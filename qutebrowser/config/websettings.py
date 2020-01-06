@@ -193,10 +193,14 @@ def init(args: argparse.Namespace) -> None:
         webkitsettings.init(args)
 
     # Make sure special URLs always get JS support
-    for pattern in ['file://*', 'chrome://*/*', 'qute://*/*']:
+    for pattern in ['file://*', 'chrome://*/*', 'qute://*/*',
+                        'chrome-extension://*/*']:
         config.instance.set_obj('content.javascript.enabled', True,
                                 pattern=urlmatch.UrlPattern(pattern))
 
+    pattern = 'chrome-extension://*/*'
+    config.instance.set_obj('content.plugins', True,
+                pattern=urlmatch.UrlPattern(pattern))
 
 @pyqtSlot()
 def shutdown() -> None:

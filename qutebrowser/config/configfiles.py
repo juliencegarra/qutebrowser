@@ -336,6 +336,8 @@ class YamlConfig(QObject):
                            'always', 'when-searching')
         self._migrate_bool(settings, 'qt.force_software_rendering',
                            'software-opengl', 'none')
+        self._migrate_bool(settings, 'content.pdf',
+                           'pdfjs', 'download')
 
         for s in ['tabs.title.format',
                   'tabs.title.format_pinned',
