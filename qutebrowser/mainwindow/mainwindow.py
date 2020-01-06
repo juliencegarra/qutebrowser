@@ -27,7 +27,7 @@ import typing
 import time
 
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QRect, QPoint, QTimer, Qt,
-                          QCoreApplication, QEventLoop)
+                          QCoreApplication, QEventLoop, QEvent)
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QApplication, QSizePolicy,
                             QMessageBox)
 
@@ -268,25 +268,25 @@ class MainWindow(QWidget):
         config.set_register_stylesheet(self)
 
         # Cleanup leftovers files and history
+        #self._commandrunner.run('session-delete --force _internal')
+        #self._commandrunner.run('session-save --force _internal')
         self._commandrunner.run('download-clear')
         self._commandrunner.run('history-clear --force')
-        self._commandrunner.run('session-delete')
 
+        self.installEventFilter(self)
         START_TIME = time.time()
         self.showMaximized()
 
-    def add_log(message):
-        """ Small hack to append message to a log """
-        if not START_TIME:
-            pass
-        else:
-            m = str((time.time()-START_TIME) * 1000.0)
+    def eventFilter(self, source, e):
+        if (e.type() == QEvent.KeyRelease):
+            if e.key() == Qt.Key_Return or e.key() == Qt.Key_Enter:
+                self.url.add_log("KEY_PRESS;ENTER")
+            elif e.key() == Qt.Key_Escape:
+                self.url.add_log(u"KEY_PRESS;ESC")
+            else:
+                self.url.add_log("KEY_PRESS;"+(e.text()))
 
-            with codecs.open("trace.txt", "a", "utf-8-sig") as ft:
-                   ft.write(m + ";")
-                   ft.write(message)
-                   ft.write("\n")
-
+        return QWidget.eventFilter(self, source, e)
 
     def _init_geometry(self, geometry):
         """Initialize the window geometry or load it from disk."""
