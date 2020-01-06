@@ -672,7 +672,7 @@ content.pdfjs:
   renamed: content.pdf
 
 content.pdf:
-  default: 'pdfjs'
+  default: 'pdfium'
   type:
     name: String
     valid_values:
